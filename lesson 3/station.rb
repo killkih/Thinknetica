@@ -1,22 +1,19 @@
 require_relative 'train.rb'
 
 class Station
-  attr_reader :trains_numbers, :name
+  attr_reader :trains, :name
 
   def initialize(name)
     @name = name
     @trains = []
-    @trains_numbers = []
   end
 
   def add_train(train)
       @trains << train
-      @trains_numbers << train.train_number
   end
 
   def delete_train(train)
     @trains.delete(train)
-    @trains_numbers.delete(train.train_number)
   end
 
   def type_number

@@ -1,15 +1,15 @@
 require_relative 'route.rb'
+require_relative 'station.rb'
 
 class Train
-  attr_accessor :speed, :wagons
-  attr_reader :current_route, :train_number, :train_type
+  attr_accessor :speed, :wagons, :route
+  attr_reader :train_number, :train_type
 
   def initialize(train_number, train_type, wagons)
     @train_number = train_number
     @train_type = train_type
     @wagons = wagons
     @speed = 0
-    @index = 0 #Индекс нужен для current_route
   end
 
   def add_pop_wagon(operation)
@@ -23,52 +23,47 @@ class Train
   end
 
   def add_route(route)
-    @route = route
-
-    @current_route = @route.stations
-    @current_route.unshift(@route.start_station)
-    @current_route.push(@route.final_station)
-
-    puts "Назначен маршрут следования: #{current_route.join(' -> ')}"
-
-    puts "Текущая станция: #{current_station}"
+    self.route = route
+    @index = 0 #Индекс нужен для перемещения поезда
+    self.route.stations[@index].add_train(self)
+    puts "Текущая станция: #{route.stations[@index].name}"
   end
 
   def go_train(operation)
     if operation == 'forward'
-
-      if current_route.length == @index + 1
-        puts "Поезд прибыл на конечную станцию!"
-      else
+      if next_station != nil
+        current_station.delete_train(self)
+        next_station.add_train(self)
         @index += 1
       end
 
     elsif operation == 'back'
-      if @index - 1 < 0
-        puts "Поезд находится на станции отправления!"
-      else
+      if back_station != nil
+        current_station.delete_train(self)
+        back_station.add_train(self)
         @index -= 1
       end
     end
+
+  end
+
+  def stop
+    self.speed = 0
   end
 
   def current_station
-    current_route[@index]
+    route.stations[@index]
   end
 
   def next_station
-    if current_route.length != @index + 1
-      current_route[@index + 1]
-    else
-      puts "Поезд находится на конечной станции!"
+    if route.stations.length != @index + 1
+      route.stations[@index + 1]
     end
   end
 
   def back_station
-    if @index - 1 < 0
-      puts "Поезд находится на станции отправления!"
-    else
-      current_route[@index - 1]
+    unless @index - 1 < 0
+      route.stations[@index - 1]
     end
   end
 
