@@ -9,7 +9,7 @@ class Train
   end
 
   def add_wagon(wagon)
-    @wagons << wagon if self.speed.zero?
+    @wagons << wagon if wagon.type == self.train_type && self.speed.zero?
   end
 
   def pop_wagon
