@@ -1,8 +1,9 @@
 class Route
-  attr_reader :start_station, :final_station, :stations
+  attr_reader :start_station, :final_station, :stations, :route_name
 
-  def initialize(start_station, final_station)
+  def initialize(start_station, final_station, route_name)
     @stations = [start_station, final_station]
+    @route_name = route_name
   end
 
   def add_station(station)

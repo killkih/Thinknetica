@@ -9,9 +9,9 @@ require_relative 'wagon'
 
 class Main
   def initialize
-    @trains = {}
-    @stations = {}
-    @routes = {}
+    @trains = []
+    @stations = []
+    @routes = []
   end
 
   def start
@@ -22,6 +22,9 @@ class Main
       puts
     end
   end
+
+  #Данные методы должны вызываться через через метод actions, пользователь не должен иметь доступ к ним
+  private
 
   def show_menu
     menu = ['1 - Создать станцию', '2 - Создать поезд', '3 - Создать маршут, добавить/удалить станцию',
@@ -62,48 +65,53 @@ class Main
     end
   end
 
-  #Данные методы должны вызываться через через метод actions, пользователь не должен иметь доступ к ним
-  private
-
   def create_station
     puts "Введите название станции: "
-    name_station = STDIN.gets.chomp
+    station_name = STDIN.gets.chomp
 
-    @stations[name_station] = Station.new(name_station)
-    puts "Станция #{@stations[name_station].name} создана!"
+    @stations << Station.new(station_name)
+    puts "Станция #{@stations.last.name} создана!"
   end
 
   def create_train
     puts "Введите номер поезда: "
-    number_train = STDIN.gets.chomp
+    train_number = STDIN.gets.chomp
     puts "Введите тип поезда(1 - грузовой, 2 - пассажирский): "
     type_of_train = STDIN.gets.chomp
 
     case type_of_train.to_i
 
     when 1
-      @trains[number_train] = CargoTrain.new(number_train)
+      @trains << CargoTrain.new(train_number)
     when 2
-      @trains[number_train] = PassengerTrain.new(number_train)
+      @trains << PassengerTrain.new(train_number)
     else
       puts "Ошибка при создании поезда!"
     end
 
-    puts "Поезд с номером #{@trains[number_train].train_number} создан!"
+    puts "Поезд с номером #{@trains.last.number} создан!"
   end
 
   def create_route
     puts "Введите название маршрута: "
-    name_route = STDIN.gets.chomp
+    name_of_route = STDIN.gets.chomp
     puts
     puts "Список станций: "
-    puts @stations.keys
+    @stations.each {|station| puts station.name}
     puts "Введите название начальной станции: "
     start_station_name = STDIN.gets.chomp
     puts "Введите название конечной станции: "
     final_station_name = STDIN.gets.chomp
 
-    @routes[name_route] = Route.new(@stations[start_station_name], @stations[final_station_name])
+    start_station_object = nil
+    final_station_object = nil
+
+    @stations.each do |station|
+      start_station_object = station if station.name == start_station_name
+      final_station_object = station if station.name == final_station_name
+    end
+
+    @routes << Route.new(start_station_object, final_station_object, name_of_route)
     loop do
 
       puts "Добавить станцию или удалить?"
@@ -113,58 +121,76 @@ class Main
       choice_action = STDIN.gets.chomp.to_i
 
       break if choice_action == 0
+
+      puts "Введите название станции: "
+      station_name = STDIN.gets.chomp
+
+      added_station = nil
+      @stations.each { |station| added_station = station if station.name == station_name}
+
       case choice_action
       when 1
-        puts "Введите название станции, которую хотите добавить: "
-        name_station = STDIN.gets.chomp
-        @routes[name_route].add_station(@stations[name_station])
+        @routes.last.add_station(added_station)
       when 2
-        puts "Введите название станции, которую хотите удалить: "
-        name_station = STDIN.gets.chomp
-        @routes[name_route].pop_station(@stations[name_station])
+        @routes.last.pop_station(added_station)
       when 0
         break
       end
 
-      @routes[name_route].print_route
+      @routes.last.print_route
     end
 
   end
 
   def assign_route
     puts "Введите название маршрута: "
-    name_route = STDIN.gets.chomp
+    route_name = STDIN.gets.chomp
     puts "Введите номер поезда: "
-    number_train = STDIN.gets.chomp
-    @trains[number_train].add_route(@routes[name_route])
-    puts "Поезду #{@trains[number_train].train_number} присвоен маршрут!"
+    train_number = STDIN.gets.chomp
+
+    train_object = nil
+    route_object = nil
+    @routes.each { |route| route_object = route if route.route_name == route_name }
+    @trains.each { |train| train_object = train if train.number == train_number }
+
+    train_object.add_route(route_object)
+    puts "Поезду #{train_object.number} присвоен маршрут #{route_object.route_name}!"
   end
 
   def hook_wagon
     puts "Введите номер поезда: "
-    number_train = STDIN.gets.chomp
+    train_number = STDIN.gets.chomp
 
-    if @trains[number_train].train_type == 'грузовой'
+    train_object = nil
+    @trains.each { |train| train_object = train if train.number == train_number }
+
+    if train_object.train_type == 'грузовой'
       wagon = FreightWagon.new
-    elsif @trains[number_train].train_type == 'пассажирский'
+    elsif train_object.train_type == 'пассажирский'
       wagon = PassengerWagon.new
     end
 
-    @trains[number_train].add_wagon(wagon)
-    puts "Текущее кол-во вагонов: #{@trains[number_train].wagons.size}"
+    train_object.add_wagon(wagon)
+    puts "Текущее кол-во вагонов: #{train_object.wagons.size}"
   end
 
   def unhook_wagon
     puts "Введите номер поезда: "
-    number_train = STDIN.gets.chomp
+    train_number = STDIN.gets.chomp
 
-    @trains[number_train].pop_wagon
-    puts "Текущее кол-во вагонов: #{@trains[number_train].wagons.size}"
+    train_object = nil
+    @trains.each { |train| train_object = train if train.number == train_number }
+
+    train_object.pop_wagon
+    puts "Текущее кол-во вагонов: #{train_object.wagons.size}"
   end
 
   def move_train
     puts "Введите номер поезда: "
-    number_train = STDIN.gets.chomp
+    train_number = STDIN.gets.chomp
+
+    train_object = nil
+    @trains.each { |train| train_object = train if train.number == train_number }
 
     puts "1 - Переместить вперёд"
     puts "2 - Переместить назад"
@@ -173,25 +199,28 @@ class Main
 
     case choice
     when 1
-      @trains[number_train].move_forward
-      puts "Вы прибыли на станцию #{@trains[number_train].current_station.name}"
+      train_object.move_forward
+      puts "Вы прибыли на станцию #{train_object.current_station.name}"
     when 2
-      @trains[number_train].move_back
-      puts "Вы прибыли на станцию #{@trains[number_train].current_station.name}"
+      train_object.move_back
+      puts "Вы прибыли на станцию #{train_object.current_station.name}"
     end
   end
 
   def show_stations
     puts "Список станций:"
-    puts @stations.keys
+    puts @stations.each { |station| puts station.name }
   end
 
   def show_trains_on_station
     puts "Введите название станции: "
-    name_station = STDIN.gets.chomp
+    station_name = STDIN.gets.chomp
+
+    station_object = nil
+    @stations.each { |station| station_object = station if station.name == station_name}
 
     puts "Список поездов на станции: "
-    @stations[name_station].trains.each { |train| puts train.train_number}
+    station_object.trains.each { |train| puts train.number}
   end
 
 end
