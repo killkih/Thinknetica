@@ -190,7 +190,7 @@ class Main
       puts "Сколько загрузить в вагон? "
       amount_volume = STDIN.gets.chomp.to_i
 
-      wagon.take_volume(amount_volume)
+      wagon.take_place(amount_volume)
     elsif train_object.train_type == 'пассажирский'
       puts "Укажите кол-во мест в вагоне: "
       wagon_places = STDIN.gets.chomp.to_i
@@ -271,7 +271,7 @@ class Main
 
     elsif train_object.train_type == 'грузовой'
       train_object.enumeration_wagons { |wagon| puts "Вагон - #{wagon.number}, тип - #{wagon.type}, " +
-      "свободный объём - #{wagon.free_volume}, занятый объём - #{wagon.taken_volume}\n" }
+      "свободный объём - #{wagon.free_places}, занятый объём - #{wagon.taken_places}\n" }
     end
   end
 
